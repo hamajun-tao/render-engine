@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: render-engine
+    name: render-engine-hamajun
     env: docker
     plan: free
     region: oregon # or singapore / frankfurt
