@@ -18,13 +18,16 @@ LABEL maintainer="DevOps Team" \
 # Explicit upstream release versions for reproducible builds
 ARG EASYTIER_VERSION="v2.6.4"
 ARG TTYD_VERSION="1.7.7"
+ARG SINGBOX_VERSION="1.14.3"
 
 # Set environment
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PORT=10000
 
-# Install runtime dependencies via Alpine apk
+# Install runtime dependencies via Alpine apk.
+# sing-box is installed from its official release below because Alpine 3.20
+# does not provide a sing-box package in the configured repositories.
 RUN apk update && \
     apk add --no-cache \
       bash \
@@ -38,10 +41,21 @@ RUN apk update && \
       tmux \
       vim \
       caddy \
-      sing-box \
       tzdata \
       procps && \
     rm -rf /var/cache/apk/*
+
+# Download and install sing-box from the official release (x86_64)
+RUN set -eux; \
+    echo "Downloading sing-box ${SINGBOX_VERSION}..."; \
+    SB_URL="https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64.tar.gz"; \
+    curl -fsSL "$SB_URL" -o /tmp/sing-box.tar.gz; \
+    mkdir -p /tmp/sing-box; \
+    tar -xzf /tmp/sing-box.tar.gz -C /tmp/sing-box; \
+    find /tmp/sing-box -type f -name "sing-box" -exec cp {} /usr/local/bin/ \;; \
+    chmod +x /usr/local/bin/sing-box; \
+    /usr/local/bin/sing-box version; \
+    rm -rf /tmp/sing-box*
 
 # Download and install EasyTier (x86_64) with deterministic version URL
 RUN set -eux; \
